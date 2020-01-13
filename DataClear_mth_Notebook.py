@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 from pprint import pprint
 from IPython.display import display
+from datetime import datetime as dt
+import time
 
 class src_clear(object): #чистит исходный файл
 
@@ -17,6 +19,7 @@ class src_clear(object): #чистит исходный файл
 
         self.df_src = self.df_src[(self.df_src['Quantaty'] >= 2) | (self.df_src['Quantaty'] is None)]
         self.df_src.fillna('nan', inplace=True)
+        self.df_src.replace(' ', 'nan', inplace=True)
         print(len(self.df_src))
 
         self.df = pd.DataFrame(index=self.df_src.index)
@@ -36,8 +39,77 @@ class src_clear(object): #чистит исходный файл
         graphics_type = translate_(self.df_src['Тип видеокарты'], graphics_type__dict)
 
         self.df['Graphic class'] = self.to_series__graphics_class(graphics_type, self.df_src['Видеокарта'])
+        
+        CPU_vendor__dict = self.to_dict__CPU(self.df_src['Ядро процессора'])
+        self.df['CPU_Vendor'] = translate_(self.df_src['Ядро процессора'], CPU_vendor__dict )
+    
+    def df_show(self):
+        display(self.df.head(20))
+    
+    def df_to_excel(self, filename, date_):
+        self.df['Date'] = date_.strftime("%Y-%m-%d")
+        self.df.to_excel(filename)
 
-
+    def to_dict__CPU(self, series_):
+        exit_ = dict()
+        series_uni = series_.unique()
+        CPU_ven_ = {
+                'Intel': [
+                        'Kaby',
+                        'Ice',
+                        'Comet',
+                        'Broadwell',
+                        'Sky',
+                        'Apollo',
+                        'Gemini',
+                        'Whiskey',
+                        'Braswell',
+                        'Bay',
+                        'Cherry',
+                        'Amber',
+                        'Coffee',
+                        'Haswell',
+                        'Prescott',
+                        'Merom',
+                        'Sandy',
+                        'Silver',
+                        'Arrandale',
+                        'Ivy'
+                        ],
+                'AMD':  [
+                        'Temash',
+                        'Zen',
+                        'Bristol',
+                        'Raven',
+                        'Stoney',
+                        'Beema',
+                        'Kabini',
+                        'Carrizo',
+                        'Kaveri',
+                        'Pinnacle'
+                        ]
+                
+                }
+        
+        exit_['nan'] = 'nan'
+        
+        for i in series_uni:
+            if i != 'nan':
+                ch = False
+                for ven in CPU_ven_:
+                    for platform in CPU_ven_[ven]:
+                        if platform in i:
+                            exit_[i] = ven
+                            ch = True
+                            break
+                    if ch:
+                        break
+           
+        
+        return exit_
+        
+        
+    
     def to_series__graphics_class(self, graphics_type, videocard):
 
         exit_ = list()
@@ -49,10 +121,13 @@ class src_clear(object): #чистит исходный файл
             'Quadro',
             'RX'
         }
-
+        
+      
         for series_ in zip(graphics_type, videocard):
             if series_[0] == 'Integrated':
                 exit_.append('Integrated')
+            elif series_[0] == 'nan':
+                exit_.append('nan')
             else:
                 ch = False
                 for j in game_prof__ls:
@@ -90,19 +165,20 @@ class src_clear(object): #чистит исходный файл
             if '.' in i:
                 x = i.find('.')
             elif i == 'nan':
-                x = 0
+                x = 4
             else:
                 x = i.find('"') - 1
 
             exit_[i] = i[:x]
 
         return exit_
+    
 
-    def df_show(self):
-        display(self.df.head(20))
-
-NB = src_clear('Source/Notebook/Ноутбук-Цены25-12-19--19-50.xlsx')
+NB = src_clear('Source/Notebook/Ноутбук-Цены11-12-19--20-28.xlsx')
 NB.df_show()
+date_ = dt(2019, 11, 15) #'Y19-10'
+
+NB.df_to_excel('Exit/Notebook/Notebook_' + date_.strftime("%y-%b") + '.xlsx', date_)
 
 
 
