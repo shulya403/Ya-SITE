@@ -27,18 +27,22 @@ class BaseClear(object):
                 'url': 'https://market.yandex.ru/catalog--noutbuki/54544/list?hid=91013',
                 'category': ['Ноутбук'],
                 'ttx_file': 'Ноутбук--характеристики.xlsx',
-                'ttx_file-out': 'NB-clear-ttx.xlsx'
+                'ttx_file_out': 'NB-clear-ttx.xlsx',
+                'out_name': 'NB'
             },
             'Монитор': {
                 'url': 'https://market.yandex.ru/catalog--monitory/54539/list?hid=91052',
                 'category': ['Монитор'],
-                'ttx_file': 'Монитор--характеристики.xlsx'
+                'ttx_file': 'Монитор--характеристики.xlsx',
+                'ttx_file_out': 'MNT-clear-ttx.xlsx',
+                'out_name': 'MNT'
             },
             'Проектор': {
                 'url': 'https://market.yandex.ru/catalog--multimedia-proektory/60865/list?hid=191219',
                 'category': ['Проектор',
                              'Карманный проектор'],
-                'ttx_file': 'Проектор--характеристики.xlsx'
+                'ttx_file': 'Проектор--характеристики.xlsx',
+                'out_name': 'PRT'
             },
             'ИБП': {
                 'url': 'https://market.yandex.ru/catalog--istochniki-bespereboinogo-pitaniia/59604/list?hid=91082',
@@ -46,7 +50,8 @@ class BaseClear(object):
                              'Резервный ИБП',
                              'ИБП с двойным преобразованием'
                              ],
-                'ttx_file': 'ИБП--характеристики.xlsx'
+                'ttx_file': 'ИБП--характеристики.xlsx',
+                'out_name': 'UPS'
             }
         }
 
@@ -66,7 +71,7 @@ class BaseClear(object):
         # котрых нет в file-out (новопришедшие). Если такого файла нет - берем все ttx-source
         try:
             # считываем TTX-file выходной
-            filename_ttx_out = self.TTX_folder + self.TTX_clear_folder + self.Categories[category]['ttx_file-out']
+            self.filename_ttx_out = self.TTX_folder + self.TTX_clear_folder + self.Categories[category]['ttx_file-out']
             self.df_full_out = pd.read_excel(filename_ttx_out, index_col=0)
 
             set_source = set(self.df_source['Name'])
@@ -75,9 +80,10 @@ class BaseClear(object):
             self.df_source = self.df_source[self.df_source['Name'].isin(set_work)]
 
         except Exception:
-            filename_ttx_out = ''
+            self.filename_ttx_out = ''
             self.df_full_out = pd.DataFrame()
 
+        self.df_source.fillna('nan', inplace=True)
         self.df_out = pd.DataFrame({'Name': self.df_source['Name']})
 
         #display(self.df_out)
@@ -100,9 +106,14 @@ class BaseClear(object):
 
     def IntegerFromText(self, string):
         pattern_ = re.compile(r'\d+|[.,]')
-        clear = "".join(pattern_.findall(string))
+        print(string)
+        if string == 'nan':
+            clear = string
+        else:
+            clear = "".join(pattern_.findall(string))
+            clear = int(float(clear))
 
-        return int(float(clear))
+        return clear
 
     #присваивает ключ словаря 'key': {набор значений} при нахождении значения в строке для unique
     def DictColumnSetPresent(self, col_data, dict_set_words, alter_word):
@@ -130,6 +141,17 @@ class BaseClear(object):
 
         return None
 
+    def DFOuttoExcel(self, category):
+
+        if self.filename_ttx_out == '':
+            filename = self.TTX_folder + self.TTX_clear_folder + self.Categories[category]['ttx_file_out']
+            self.df_out.to_excel(filename)
+        else:
+            df_last_data = pd.read_excel(self.filename_ttx_out, index_col=0)
+            df_last_data = pd.concat([df_last_data, self.df_out])
+            df_last_data.to_excel(self.filename_ttx_out)
+
+
 class NotebookClear(BaseClear):
     def main(self):
         self.TTXfileRead('Ноутбук')
@@ -156,16 +178,20 @@ class NotebookClear(BaseClear):
         self.df_out.loc[(self.df_out['Video_conf'] == 'Integrated')
                         & (self.df_out['Screen_size'].isin({'15"', '16">'})), 'Clusters_Screen/GPU'] = 'Integrated GPU (15">)'
 
-        display(self.df_out)
+        display(self.df_out.head(10))
+
+        self.DFOuttoExcel('Ноутбук')
 
     def CdVideo(self, cd_video_type, cd_GPU):
         dictsf_video_type = {
-            'External': {'дискретная'}
+            'External': {'дискретная'},
+            'nan': {'nan'}
         }
 
         dictsf_GPU_class = {
             'GM': {'GTX', 'RTX', 'RX', 'R7'},
-            'Pro': {'Quadro', 'FirePro', 'Pro WX'}
+            'Pro': {'Quadro', 'FirePro', 'Pro WX'},
+            'nan': {'nan'}
         }
 
         dict_video_type = self.DictColumnSetPresent(cd_video_type, dictsf_video_type, 'Integrated')
@@ -186,7 +212,9 @@ class NotebookClear(BaseClear):
     def DictScreenSize(self, col_data):
         dict_ = self.DictColumnMap(col_data, self.IntegerFromText)
         for i in dict_:
-            if dict_[i] <= 12:
+            if dict_[i] == 'nan':
+                dict_[i] = self.NanProcessing()
+            elif dict_[i] <= 12:
                 dict_[i] = '<12"'
             elif dict_[i] < 16:
                 dict_[i] = str(dict_[i]) + '"'
@@ -214,7 +242,10 @@ class MonitorClear(BaseClear):
     def DictScreenSize(self, col_data):
         dict_ = self.DictColumnMap(col_data, self.IntegerFromText)
         for i in dict_:
-            if dict_[i] <= 19:
+
+            if dict_[i] == 'nan':
+                dict_[i] = self.NanProcessing()
+            elif dict_[i] <= 19:
                 dict_[i] = '<19"'
             elif dict_[i] < 34:
                 dict_[i] = str(dict_[i]) + '"'
