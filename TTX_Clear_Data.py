@@ -72,7 +72,7 @@ class BaseClear(object):
         try:
             # считываем TTX-file выходной
             self.filename_ttx_out = self.TTX_folder + self.TTX_clear_folder + self.Categories[category]['ttx_file-out']
-            self.df_full_out = pd.read_excel(filename_ttx_out, index_col=0)
+            self.df_full_out = pd.read_excel(self.filename_ttx_out, index_col=0)
 
             set_source = set(self.df_source['Name'])
             set_out = set(self.df_full_out['Name'])
@@ -104,6 +104,7 @@ class BaseClear(object):
 
         return dict_
 
+    #Берет из str только цифры и ./, преобразовывает float в int
     def IntegerFromText(self, string):
         pattern_ = re.compile(r'\d+|[.,]')
         print(string)
@@ -115,7 +116,8 @@ class BaseClear(object):
 
         return clear
 
-    #присваивает ключ словаря 'key': {набор значений} при нахождении значения в строке для unique
+    #присваивает ключ словаря 'key': {набор значений} при нахождении одного из значений в строке для unique;
+    #если не находит ни одго значения примваивает alter_word
     def DictColumnSetPresent(self, col_data, dict_set_words, alter_word):
 
         dict_ = dict()
@@ -140,7 +142,7 @@ class BaseClear(object):
     def NanProcessing(self):
 
         return None
-
+    #добавлят данные df_out к архиву (ели он есть) или формирует первичный архив
     def DFOuttoExcel(self, category):
 
         if self.filename_ttx_out == '':

@@ -36,7 +36,7 @@ class ConcatPricesExcel(object):
         pprint(self.xlsx_file_list)
 
     #создает словарь self.dict_file_mth
-    # 'файл парсов.xls': {'Mth': выражение Мес-год из имени файла, 'Date': datetaime DD-MM-YYYY}
+    # 'файл прайсов.xls': {'Mth': выражение Мес-год из имени файла, 'Date': datetaime DD-MM-YYYY}
     def DictFileDate(self):
 
         def toDate(re_str):
