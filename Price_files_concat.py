@@ -93,5 +93,5 @@ class ConcatPricesExcel(object):
 
 #main
 
-NBDir = ConcatPricesExcel('TTX_files/Mth_price/Ноутбук', 'NB')
-NBDir.ConcatenateFilesExcel()
+#NBDir = ConcatPricesExcel('TTX_files/Mth_price/Ноутбук', 'NB')
+#NBDir.ConcatenateFilesExcel()

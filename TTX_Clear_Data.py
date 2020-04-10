@@ -1,11 +1,8 @@
-# TODO: Схема данных целевой СУБД
+# TODO: ok Схема данных целевой СУБД
 #   ok Базовый класс чистки
 #   ok Класс чистки ноутбуков
 #   ok Класс чистки мониторов
-#   Конкатенация прайсов по категории по месяцам
-#   Подключение к СУБД
-#   Заливка в CloudSQL
-#   Организация обновления данных по очистки и заливке в Clou
+#   0k Конкатенация прайсов по категории по месяцам
 #   Прибить href к файлам TTX
 #   дочистка NB
 
@@ -239,7 +236,8 @@ class MonitorClear(BaseClear):
         dict_SS = self.DictScreenSize(series_SS)
         self.df_out['Screen_size'] = self.vec_TranslateAny(series_SS, dict_SS)
 
-        display(self.df_out)
+        #display(self.df_out)
+        self.DFOuttoExcel('Монитор')
 
     def DictScreenSize(self, col_data):
         dict_ = self.DictColumnMap(col_data, self.IntegerFromText)
@@ -262,8 +260,8 @@ class MonitorClear(BaseClear):
 
 
 ### МЭЙН
-ClearNB = NotebookClear()
-ClearNB.main()
+#ClearNB = NotebookClear()
+#ClearNB.main()
 
 #ClearMonitor = MonitorClear()
 #ClearMonitor.main()
